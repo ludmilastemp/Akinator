@@ -1,0 +1,38 @@
+digraph STL
+{
+rankdir = TB
+graph [ splines = ortho, splines = true ]
+node  [ shape = record, style = filled, fillcolor = "#E0FFFF", color = "#A0FFFF" ]
+edge  [ arrowhead = none ]
+
+f0 [label = " 10 " ]
+f0->f1
+f1 [label = " 5 " ]
+f1->f2
+f2 [label = " nil ", fillcolor = "#E0FFDF", color = "#E0FFDF" ]
+f1->f3
+f3 [label = " nil ", fillcolor = "#E0FFDF", color = "#E0FFDF" ]
+f0->f5
+f5 [label = " 17 " ]
+f5->f6
+f6 [label = " 15 " ]
+f6->f7
+f7 [label = " 12 " ]
+f7->f8
+f8 [label = " 11 " ]
+f8->f9
+f9 [label = " nil ", fillcolor = "#E0FFDF", color = "#E0FFDF" ]
+f8->f10
+f10 [label = " nil ", fillcolor = "#E0FFDF", color = "#E0FFDF" ]
+f7->f12
+f12 [label = " nil ", fillcolor = "#E0FFDF", color = "#E0FFDF" ]
+f6->f14
+f14 [label = " nil ", fillcolor = "#E0FFDF", color = "#E0FFDF" ]
+f5->f16
+f16 [label = " 20 " ]
+f16->f17
+f17 [label = " nil ", fillcolor = "#E0FFDF", color = "#E0FFDF" ]
+f16->f18
+f18 [label = " nil ", fillcolor = "#E0FFDF", color = "#E0FFDF" ]
+
+}
