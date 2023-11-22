@@ -5,13 +5,16 @@
 #include <stdlib.h>
 #include <assert.h>
 
-typedef int BIN_TREE_DATA_T;
+typedef const char* BIN_TREE_DATA_T;
+
+#define BIN_TREE_DATA_PRINT_SPECIFIER "%s"
 
 struct NodeBinTree
 {
     BIN_TREE_DATA_T data;
     NodeBinTree* left;
     NodeBinTree* right;
+    NodeBinTree* parent;
 };
 
 struct BinTree
@@ -24,6 +27,7 @@ NodeBinTree*
 NodeBinTreeCtor (BIN_TREE_DATA_T data,
                  NodeBinTree* left    = nullptr,
                  NodeBinTree* right   = nullptr,
+                 NodeBinTree* parent  = nullptr,
                  BinTree*     binTree = nullptr);
 
 NodeBinTree*
@@ -43,5 +47,12 @@ NodeBinTree*
 InsertSaveSorting (BIN_TREE_DATA_T data,
                    NodeBinTree* node,
                    BinTree* binTree  = nullptr);
+
+int
+BinTreePrintPreorder (NodeBinTree* node,
+                      const char* const fileName);
+
+BinTree*
+NodeBinTreeReadPreorder (const char* const fileName);
 
 #endif /* STL_bintree_struct_ */

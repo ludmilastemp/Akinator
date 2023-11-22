@@ -1,0 +1,29 @@
+digraph STL
+{
+rankdir = TB
+graph [ splines = ortho, splines = true ]
+node  [ shape = record, style = filled, fillcolor = "#E0FFFF", color = "#A0FFFF" ]
+edge  [ arrowhead = none ]
+
+
+f0 [ label = "животное?" ]
+f0->f1 [ label = " да "]
+
+f1 [ label = "ест приматов?" ]
+f1->f2 [ label = " да "]
+
+f2 [ label = "макака", fillcolor = "#CCFFCC", color = "#CCFFCC" ]
+f1->f3 [ label = " нет "]
+
+f3 [ label = "крокодил", fillcolor = "#CCFFCC", color = "#CCFFCC" ]
+f0->f5 [ label = " нет "]
+
+f5 [ label = "ведет матан?" ]
+f5->f6 [ label = " да "]
+
+f6 [ label = "Лукашов", fillcolor = "#CCFFCC", color = "#CCFFCC" ]
+f5->f7 [ label = " нет "]
+
+f7 [ label = "Богданов", fillcolor = "#CCFFCC", color = "#CCFFCC" ]
+
+}
