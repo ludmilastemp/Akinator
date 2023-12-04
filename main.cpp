@@ -4,39 +4,27 @@
 
 #include <stdio.h>
 
-int main()
+int main (const int argc, const char** argv)
 {
+    File file = { .name = argv[1] };
+    BinTree* tree = BinTreeReadPreorder (&file);
+
     /*
-    char ch = 0;
+    const char* s1 = "животное";
+    const char* s2 = "ведет матан";
 
-    while (isspace(ch = getchar()));
-    printf ("printf %d '%c'\n", ch, ch);
+    const char* s4 = "крокодил";
+    const char* s5 = "Лукашов";
+    const char* s6 = "Богданов";
 
-    while (isspace(ch = getchar()));
-    printf ("printf %d '%c'\n", ch, ch);
+    NodeBinTree* n4 = NodeBinTreeCtor (s4, 0, 0);
+    NodeBinTree* n5 = NodeBinTreeCtor (s5, 0, 0);
+    NodeBinTree* n6 = NodeBinTreeCtor (s6, 0, 0);
 
-    return 0;       */
+    NodeBinTree* n2 = NodeBinTreeCtor (s2, n5, n6);
+    NodeBinTree* n1 = NodeBinTreeCtor (s1, n4, n2);
 
-                              // хардкод
-    BinTree* tree = NodeBinTreeReadPreorder ("STL_preorder.txt");
-//
-//    const char* s1 = "животное";
-//    const char* s2 = "ведет матан";
-//
-//    const char* s4 = "крокодил";
-//    const char* s5 = "Лукашов";
-//    const char* s6 = "Богданов";
-//
-//    NodeBinTree* n4 = NodeBinTreeCtor (s4, 0, 0);
-//    NodeBinTree* n5 = NodeBinTreeCtor (s5, 0, 0);
-//    NodeBinTree* n6 = NodeBinTreeCtor (s6, 0, 0);
-//
-//    NodeBinTree* n2 = NodeBinTreeCtor (s2, n5, n6);
-//    NodeBinTree* n1 = NodeBinTreeCtor (s1, n4, n2);
-//
-//    BinTree* tree = BinTreeCtor (n1);
-
-//                \n3. Режим \"википедия c прибамбахом\"
+    BinTree* tree = BinTreeCtor (n1);  */
 
     char answer = 0;
 
@@ -68,7 +56,7 @@ int main()
             {
             printf ("Чьи тайны тебе поведать?\n");
 
-            char object[100] = { 0 };
+            char object[MAX_LEN_STR] = { 0 };
             scanf ("%s", &object);
 
             FindObject (tree, object);
@@ -80,8 +68,8 @@ int main()
             {
             printf ("Кого сегодня будем сравнивать?\n");
 
-            char object1[100] = { 0 };
-            char object2[100] = { 0 };
+            char object1[MAX_LEN_STR] = { 0 };
+            char object2[MAX_LEN_STR] = { 0 };
 
             printf ("Введите первый объект: \n");
             scanf ("%s", &object1);
@@ -89,7 +77,7 @@ int main()
             printf ("Введите второй объект: \n");
             scanf ("%s", &object2);
 
-            CompareObject (tree, object1, object2);
+            CompareObjects (tree, object1, object2);
 
             break;
             }
@@ -106,7 +94,7 @@ int main()
 
             case 5:
             {
-            BinTreePrintPreorder (tree->root, "STL_preorder.txt");
+            BinTreePrintPreorder (tree->root, argv[2]);
             printf ("Ну теперь то я точно это не забуду\n");
 
             break;
@@ -115,6 +103,7 @@ int main()
             case 6:
             {
             NodeBinTreeDtor (tree->root);
+            STL_Fclose (&file);
 
             return 0;
             }
@@ -124,8 +113,9 @@ int main()
             }
         }
 
-        printf ("\n\nНажмите пробел, а после enter чтобы продолжить...\n");
-        while ((answer = getchar()) != ' ');
+        fflush (stdin);
+        printf ("\n\nНажмите enter, чтобы продолжить...\n");
+        while ((answer = getchar()) != '\n');
     }
 
     return 0;

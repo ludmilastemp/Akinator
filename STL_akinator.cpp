@@ -1,32 +1,29 @@
 #include "STL_akinator.h"
 
-static const int MAX_LEN_STR = 100;
-
-static const int FIND  = 696969;
-static const int LEFT  = 1;
-static const int RIGHT = 2;
-
 static NodeBinTree*
 CreateObject (NodeBinTree* root);
 
 static NodeBinTree*
 FindObjectRecursively (NodeBinTree* node,
                        Stack_int* way,
-                       const char* answer);
+                       const char* object);
 
 static NodeBinTree*
-PrintObject (NodeBinTree* node,
-             const char* answer,
-             Stack_int* way,
-             int initialStep = 0,
-             int initialSize = 0);
+DescribeObject (NodeBinTree* node,
+                const char* object,
+                Stack_int* way,
+                int initialStep = 0,
+                int initialSize = 0);
 
 static NodeBinTree*
-PrintObjectDifference (BinTree* tree,
-                       const char* object1,
-                       Stack_int* way1,
-                       const char* object2,
-                       Stack_int* way2);
+DescribeObjectDifference (BinTree* tree,
+                          const char* object1,
+                          Stack_int* way1,
+                          const char* object2,
+                          Stack_int* way2);
+
+static NodeBinTree*
+FoundAnswer (NodeBinTree* node);
 
 NodeBinTree*
 PredictObject (BinTree* tree)
@@ -44,37 +41,15 @@ PredictObject (BinTree* tree)
     }
 
     NodeBinTree* node = tree->root;
-    char answer[10] = { 0 };
+    char answer[MAX_LEN_ANS] = { 0 };
 
-    printf ("Пожалуйста, отвечайте только 'дa' или 'нет'\n");
+    printf ("Пожалуйста, отвечайте только '%s' или '%s'\n", POSITIVE_ANSWER, NEGATIVE_ANSWER);
 
     while (true)
     {
         if (node->left == nullptr && node->right == nullptr)
         {
-            printf ("Ответ: %s\n", node->data);
-
-            while (true)
-            {
-                printf ("\nКак ты считаешь, я заслужил синюю руку?\n");
-
-                scanf ("%s", &answer);
-
-                if (strncmp (answer, "да", 2) == 0)
-                {
-                    printf ("Я всегда в себя верил!\n");
-                    return node;
-                }
-                else if (strncmp (answer, "нет", 3) == 0)
-                {
-                    CreateObject (node);
-                    return 0;
-                }
-                else
-                {
-                    printf ("Да ну блин, я в просил отвечать только 'дa' или 'нет'\n");
-                }
-            }
+            FoundAnswer (node);
 
             return node;
         }
@@ -83,7 +58,7 @@ PredictObject (BinTree* tree)
 
         scanf ("%s", &answer);
 
-        if (strncmp (answer, "да", 2) == 0)
+        if (strcmp (answer, POSITIVE_ANSWER) == 0)
         {
             if (node->left != nullptr)
             {
@@ -95,7 +70,7 @@ PredictObject (BinTree* tree)
                 return node;
             }
         }
-        else if (strncmp (answer, "нет", 3) == 0)
+        else if (strcmp (answer, NEGATIVE_ANSWER) == 0)
         {
             if (node->right != nullptr)
             {
@@ -109,20 +84,32 @@ PredictObject (BinTree* tree)
         }
         else
         {
-            printf ("Да ну блин, я в просил отвечать только 'дa' или 'нет'\n");
+            printf ("Да ну блин, я же просил отвечать только '%s' или '%s'\n", POSITIVE_ANSWER, NEGATIVE_ANSWER);
         }
     }
 
-    return 0;
+    return nullptr;
 }
 
 NodeBinTree*
-FindObject (BinTree* tree, const char* answer)
+FindObject (BinTree* tree, const char* object)
 {
+    if (tree == nullptr)
+    {
+        printf ("no tree found\n");
+        return nullptr;
+    }
+
+    if (object == nullptr)
+    {
+        printf ("no object point found\n");
+        return nullptr;
+    }
+
     Stack_int way = {};
     StackCtor (&way);
 
-    FindObjectRecursively (tree->root, &way, answer);
+    FindObjectRecursively (tree->root, &way, object);
 
     if (way.size == 0)
     {
@@ -134,7 +121,7 @@ FindObject (BinTree* tree, const char* answer)
         StackPop (&way, &lastWay);
 
         printf ("\nХихи, сейчас я тебе все про него расскажу\n");
-        PrintObject (tree->root, answer, &way);
+        DescribeObject (tree->root, object, &way);
     }
 
     StackDtor (&way);
@@ -143,7 +130,7 @@ FindObject (BinTree* tree, const char* answer)
 }
 
 int
-CompareObject (BinTree* tree, const char* object1, const char* object2)
+CompareObjects (BinTree* tree, const char* object1, const char* object2)
 {
     Stack_int wayObject1 = {};
     StackCtor (&wayObject1);
@@ -154,15 +141,12 @@ CompareObject (BinTree* tree, const char* object1, const char* object2)
     FindObjectRecursively (tree->root, &wayObject1, object1);
     FindObjectRecursively (tree->root, &wayObject2, object2);
 
-    if (wayObject1.size == 0)
+    if (wayObject1.size == 0 || wayObject2.size == 0)
     {
-        printf ("Я покопался в ствоих чертогах разума, но к сожалению,  \
-                 я не знаю, кто такой %s :(\n", object1);
-    }
-    else if (wayObject2.size == 0)
-    {
-        printf ("Я покопался в ствоих чертогах разума, но к сожалению,  \
-                 я не знаю, кто такой %s :(\n", object2);
+        printf ("Я покопался в ствоих чертогах разума, но к сожалению, я не знаю, кто такой ");
+
+        if (wayObject1.size == 0) printf ("%s\n", object1);
+        if (wayObject2.size == 0) printf ("%s\n", object2);
     }
     else
     {
@@ -170,71 +154,110 @@ CompareObject (BinTree* tree, const char* object1, const char* object2)
         StackPop (&wayObject1, &lastWay);
         StackPop (&wayObject2, &lastWay);
 
-        PrintObjectDifference (tree, object1, &wayObject1, object2, &wayObject2);
+        DescribeObjectDifference (tree, object1, &wayObject1, object2, &wayObject2);
     }
 
     StackDtor (&wayObject1);
     StackDtor (&wayObject2);
-}
-
-static NodeBinTree*
-CreateObject (NodeBinTree* root)
-{
-    char answer[MAX_LEN_STR]   = { 0 };
-    char question[MAX_LEN_STR] = { 0 };
-
-    printf ("А кто это был?\n");
-
-    int i = 0;
-    while (iscntrl(question[i++] = getchar()) == 0);
-    question[i - 1] = '\0';
-
-    while ((question[0] = getchar()) != '\n');
-
-    printf ("Какое свойство его отличает от %s?\
-             \nВведите свойство: %s ", root->data, answer);
-
-    i = 0;
-    while (iscntrl(question[i++] = getchar()) == 0);
-    question[i - 1] = '\0';
-
-    char* answerCalloc = (char*) calloc (strlen (answer), sizeof (char));
-    assert (answerCalloc);  // error
-
-    char* questionCalloc = (char*) calloc (strlen (question), sizeof (char));
-    assert (questionCalloc);  // error
-
-    strncpy (answerCalloc,   answer,   strlen(answer));
-    strncpy (questionCalloc, question, strlen(question));
-
-    root->left  = NodeBinTreeCtor (answerCalloc, 0, 0);
-    root->right = NodeBinTreeCtor (root->data, 0, 0);
-    root->data  = questionCalloc;
-
-    printf ("Благодарю, теперь я стал умнее!\n");
 
     return 0;
 }
 
 static NodeBinTree*
-FindObjectRecursively (NodeBinTree* node, Stack_int* way, const char* answer)
+FoundAnswer (NodeBinTree* node)
+{
+    if (node == nullptr)
+    {
+        printf ("no node found\n");
+        return 0;
+    }
+
+    char answer[MAX_LEN_ANS] = { 0 };
+    printf ("Ответ: %s\n", node->data);
+
+    while (true)
+    {
+        printf ("\nКак ты считаешь, я заслужил синюю руку?\n");
+
+        scanf ("%s", &answer);
+
+        if (strcmp (answer, POSITIVE_ANSWER) == 0)
+        {
+            printf ("Я всегда в себя верил!\n");
+            return node;
+        }
+        else if (strcmp (answer, NEGATIVE_ANSWER) == 0)
+        {
+            CreateObject (node);
+            return 0;
+        }
+        else
+        {
+            printf ("Да ну блин, я же просил отвечать только '%s' или '%s'\n", POSITIVE_ANSWER, NEGATIVE_ANSWER);
+        }
+    }
+
+    return node;
+}
+
+static NodeBinTree*
+CreateObject (NodeBinTree* node)
+{
+    char* answer = (char*) calloc (MAX_LEN_STR, sizeof (char));
+    if (answer == nullptr)
+    {
+        printf ("ERROR_NOT_MEMORY\n");
+        return nullptr;
+    }
+
+    char* question = (char*) calloc (MAX_LEN_STR, sizeof (char));
+    if (question == nullptr)
+    {
+        printf ("ERROR_NOT_MEMORY\n");
+        return nullptr;
+    }
+
+    printf ("А кто это был?\n");
+    fflush (stdin);
+
+    fgets (answer, MAX_LEN_STR, stdin);
+    answer[strlen (answer) - 1] = '\0';
+
+    printf ("Какое свойство его отличает от %s?\
+             \nВведите свойство: %s ", node->data, answer);
+    fflush (stdin);
+
+    fgets (question, MAX_LEN_STR, stdin);
+    question[strlen (question) - 1] = '\0';
+
+    node->left  = NodeBinTreeCtor (answer,     nullptr, nullptr);
+    node->right = NodeBinTreeCtor (node->data, nullptr, nullptr);
+    node->data  = question;
+
+    printf ("Благодарю, теперь я стал умнее!\n");
+
+    return node;
+}
+
+static NodeBinTree*
+FindObjectRecursively (NodeBinTree* node, Stack_int* way, const char* object)
 {
     if (way == nullptr)
     {
         printf ("no stack way found\n");
-        return 0;
+        return nullptr;
     }
 
-    if (node == nullptr) return 0;
+    if (node == nullptr) return nullptr;
 
-    if (strcmp (node->data, answer) == 0)
+    if (strcmp (node->data, object) == 0)
     {
         StackPush (way, FIND);
-        return 0;
+        return node;
     }
 
     StackPush (way, LEFT);
-    FindObjectRecursively (node->left, way, answer);
+    FindObjectRecursively (node->left, way, object);
 
     int lastWay = 0;
 
@@ -242,47 +265,53 @@ FindObjectRecursively (NodeBinTree* node, Stack_int* way, const char* answer)
     if (lastWay == FIND)
     {
         StackPush (way, lastWay);
-        return 0;
+        return node;
     }
 
     StackPush (way, RIGHT);
-    FindObjectRecursively (node->right, way, answer);
+    FindObjectRecursively (node->right, way, object);
 
     StackPop (way, &lastWay);
     if (lastWay == FIND)
     {
         StackPush (way, lastWay);
-        return 0;
+        return node;
     }
 
-    return 0;
+    return nullptr;
 }
 
 static NodeBinTree*
-PrintObject (NodeBinTree* node, const char* answer, Stack_int* way, int initialStep, int initialSize)
+DescribeObject (NodeBinTree* node, const char* object, Stack_int* way, int initialStep, int initialSize)
 {
     if (node == nullptr) return nullptr;
     if (way == nullptr)  return nullptr;
-    if (answer != 0)      printf ("%s \n", answer);
+    if (object != 0)      printf ("%s \n", object);
     if (initialSize == 0) initialSize = way->size;
 
     for (int i = initialStep; i < initialSize; i++)
     {
         if (way->data[i] == LEFT)  printf ("  это ");
-        if (way->data[i] == RIGHT) printf ("  это не ");
+        else printf ("  это не ");
 
         printf ("%s\n", node->data);
 
         if (way->data[i] == LEFT)  node = node->left;
-        if (way->data[i] == RIGHT) node = node->right;
-    }                               // nen 2 if
-                                    // yf erfpfntkz[ 1
+        else node = node->right;
+    }
+
     return node;
 }
 
 static NodeBinTree*
-PrintObjectDifference (BinTree* tree, const char* object1, Stack_int* way1, const char* object2, Stack_int* way2)
+DescribeObjectDifference (BinTree* tree, const char* object1, Stack_int* way1, const char* object2, Stack_int* way2)
 {
+    if (tree == nullptr    ||
+        way1 == nullptr    ||
+        way2 == nullptr    ||
+        object1 == nullptr ||
+        object2 == nullptr)   return nullptr;
+
     printf ("\nПрисаживайтесь поудобнее\n");
 
     NodeBinTree* node = tree->root;
@@ -295,14 +324,14 @@ PrintObjectDifference (BinTree* tree, const char* object1, Stack_int* way1, cons
         while (i < way1->size && i < way2->size &&
                way1->data[i] == way2->data[i]) i++;
 
-        node = PrintObject (node, 0, way1, 0, i);
+        node = DescribeObject (node, 0, way1, 0, i);
     }
 
     if (way1->data[0] == way2->data[0]) printf ("HO ");
-    PrintObject (node, object1, way1, i);
+    DescribeObject (node, object1, way1, i);
 
     if (way1->data[0] == way2->data[0]) printf ("A  ");
-    PrintObject (node, object2, way2, i);
+    DescribeObject (node, object2, way2, i);
 
-    return 0;
+    return nullptr;
 }

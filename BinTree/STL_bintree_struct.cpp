@@ -1,13 +1,23 @@
 #include "STL_bintree_struct.h"
 
 static int
-SubtreePrintPreorderToFile (NodeBinTree* node,
-                            FILE* fp);
+SubtreePrintPreorder (NodeBinTree* node,
+                      FILE* fp);
 
 static NodeBinTree*
 NodeBinTreeCtorPreorder (char* const buf,
                          int* len,
                          NodeBinTree* parent = nullptr);
+
+static NodeBinTree*
+ReadDataNodeBinTree (char* const buf,
+                     int* len);
+
+static NodeBinTree*
+ReadBranchNodeBinTree (char* const buf,
+                       int* len,
+                       NodeBinTree* node);
+
 NodeBinTree*
 NodeBinTreeCtor (BIN_TREE_DATA_T data,
                  NodeBinTree* left,
@@ -16,7 +26,11 @@ NodeBinTreeCtor (BIN_TREE_DATA_T data,
                  BinTree*     binTree)
 {
     NodeBinTree* node = (NodeBinTree*) calloc (1, sizeof (NodeBinTree));
-    assert (node);  // error
+    if (node == nullptr)
+    {
+        printf ("ERROR_NO_MEMORY\n");
+        return nullptr;
+    }
 
     node->data   = data;
     node->left   = left;
@@ -36,7 +50,7 @@ NodeBinTreeDtor (NodeBinTree* node)
     NodeBinTreeDtor (node->left);
     NodeBinTreeDtor (node->right);
 
-    node->data  = 0;
+    node->data  = nullptr; // 0
     node->left  = nullptr;
     node->right = nullptr;
 
@@ -46,13 +60,18 @@ NodeBinTreeDtor (NodeBinTree* node)
 }
 
 BinTree*
-BinTreeCtor (NodeBinTree* root, int size)
+BinTreeCtor (NodeBinTree* root, int size, char* buf)
 {
     BinTree* binTree = (BinTree*) calloc (1, sizeof (BinTree));
-    assert (binTree);    // error
+    if (binTree == nullptr)
+    {
+        printf ("ERROR_NOT_MEMORY\n");
+        return nullptr;
+    }
 
     binTree->root = root;
     binTree->size = size;
+    binTree->buf  = buf;
 
     return binTree;
 }
@@ -60,14 +79,14 @@ BinTreeCtor (NodeBinTree* root, int size)
 BinTree*
 BinTreeDtor (BinTree* binTree)
 {
-    if (binTree == nullptr) return nullptr;  // error
+    if (binTree == nullptr) return nullptr;
 
     NodeBinTreeDtor (binTree->root);
+    if (binTree->buf      != nullptr) free (binTree->buf);
 
     binTree->root = nullptr;
+    binTree->buf  = nullptr;
     binTree->size = 0;
-
-    free (binTree);
 
     return nullptr;
 }
@@ -77,7 +96,7 @@ SubtreeDump (NodeBinTree* node)
 {
     if (node == nullptr)
     {
-        printf ("nil ");
+        printf ("%s ", NULL_POINTER);
         return 0;
     }
 
@@ -92,86 +111,97 @@ SubtreeDump (NodeBinTree* node)
     return 0;
 }
 
-NodeBinTree*
-InsertSaveSorting (BIN_TREE_DATA_T data,
-                   NodeBinTree* currentNode,
-                   BinTree* binTree)
+int
+BinTreePrintPreorder (NodeBinTree* node, const char* const fileName)
 {
-    NodeBinTree* nodeNew = NodeBinTreeCtor (data, 0, 0, 0, binTree);
+    if (fileName == nullptr) return ERROR_NOT_FILE;
+    if (node     == nullptr) return ERROR_NOT_NODE_POINTER;
 
-    while (currentNode != nullptr)
-    {
-        if (nodeNew->data < currentNode->data)
-        {
-            if (currentNode->left == nullptr)
-            {
-                currentNode->left = nodeNew;
-                break;
-            }
-            else currentNode = currentNode->left;
-        }
-        else
-        {
-            if (currentNode->right == nullptr)
-            {
-                currentNode->right = nodeNew;
-                break;
-            }
-            else currentNode = currentNode->right;
-        }
-    }
+    FILE* fp = fopen (fileName, "w");
+    assert (fp);
 
-    nodeNew->parent = currentNode;
+    SubtreePrintPreorder (node, fp);
 
-    return nodeNew;
+    fclose (fp);
 }
 
+
 static int
-SubtreePrintPreorderToFile (NodeBinTree* node, FILE* fp)
+SubtreePrintPreorder (NodeBinTree* node, FILE* fp)
 {
+    if (fp == nullptr) return ERROR_NOT_FILE_POINTER;
+
     if (node == nullptr)
     {
-        fprintf (fp, "nil");
+        fprintf (fp, NULL_POINTER);
         return 0;
     }
 
     fprintf (fp, "(");
 
     fprintf (fp, "\"" BIN_TREE_DATA_PRINT_SPECIFIER "\"", node->data);
-    SubtreePrintPreorderToFile (node->left, fp);
-    SubtreePrintPreorderToFile (node->right, fp);
+    SubtreePrintPreorder (node->left,  fp);
+    SubtreePrintPreorder (node->right, fp);
 
     fprintf (fp, ")");
 
     return 0;
 }
 
-int
-BinTreePrintPreorder (NodeBinTree* node, const char* const fileName)
+BinTree*
+BinTreeReadPreorder (struct File* file)
 {
-    assert (node);
-    assert (fileName);
+    if (file == nullptr)
+    {
+        printf ("ERROR_NOT_FILE\n");
+        return nullptr;
+    }
 
-    FILE* fp = fopen (fileName, "w");
-    assert (fp);
+    STL_Fread (file);
 
-    SubtreePrintPreorderToFile (node, fp);
+    int pointer = 0;
 
-    fclose (fp);
+    NodeBinTree* root = NodeBinTreeCtorPreorder (file->text, &pointer);
+    BinTree* tree = BinTreeCtor(root, 1, file->text);
+
+    return tree;
 }
-
-#include <stdlib.h>   //
-#include <sys\stat.h>
-#include <string.h>
 
 static NodeBinTree*
 NodeBinTreeCtorPreorder (char* const buf, int* len, NodeBinTree* parent)
 {
-    assert (buf);
-    assert (len);
+    if (buf == nullptr || len == nullptr)
+    {
+        printf ("ERROR_NOT_FILE_POINTER\n");
+        return nullptr;
+    }
 
     if (buf[(*len)++] != '(')
     {
+        return nullptr;
+    }
+
+    NodeBinTree* node = ReadDataNodeBinTree (buf, len);
+
+    node->left   = ReadBranchNodeBinTree (buf, len, node);
+    node->right  = ReadBranchNodeBinTree (buf, len, node);
+    node->parent = parent;
+
+    if (buf[*len] == ')')
+    {
+        (*len)++;
+        return node;
+    }
+
+    return nullptr;
+}
+
+static NodeBinTree*
+ReadDataNodeBinTree (char* const buf, int* len)
+{
+    if (buf == nullptr || len == nullptr)
+    {
+        printf ("ERROR_NOT_FILE_POINTER\n");
         return nullptr;
     }
 
@@ -187,59 +217,29 @@ NodeBinTreeCtorPreorder (char* const buf, int* len, NodeBinTree* parent)
     while (buf[(*len)++] != '"');
     buf[*len - 1] = '\0';
 
-    if (buf[(*len)] == '(')
+    return node;
+}
+
+static NodeBinTree*
+ReadBranchNodeBinTree (char* const buf, int* len,
+                       NodeBinTree* node)
+{
+    if (buf == nullptr || len == nullptr)
     {
-        node->left = NodeBinTreeCtorPreorder (buf, len, node);
-    }
-    else if (strncmp (buf + *len, "nil", 3) == 0)
-    {
-        *len += 3;
-        node->left = nullptr;
+        printf ("ERROR_NOT_FILE_POINTER\n");
+        return nullptr;
     }
 
     if (buf[(*len)] == '(')
     {
-        node->right = NodeBinTreeCtorPreorder (buf, len, node);
-    }
-    else if (strncmp (buf + *len, "nil", 3) == 0)
-    {
-        *len += 3;
-        node->right = nullptr;
+        return NodeBinTreeCtorPreorder (buf, len, node);
     }
 
-    node->parent = parent;
-
-    if (buf[*len] == ')')
+    else if (strncmp (buf + *len, NULL_POINTER, NULL_POINTER_LEN) == 0)
     {
-        (*len)++;
-        return node;
+        *len += NULL_POINTER_LEN;
+        return nullptr;
     }
 
     return nullptr;
-}
-
-BinTree*
-NodeBinTreeReadPreorder (const char* const fileName)
-{
-    assert (fileName);
-
-    FILE* fp = fopen (fileName, "rb");
-    assert (fp); // err
-
-    struct stat buff = { 0 };
-
-    fstat (fileno (fp), &buff);
-    int size = buff.st_size;
-
-    char* buf = (char*) calloc (size + 1, sizeof (char));
-    assert (buf);  // err
-
-    fread (buf, sizeof (char), size, fp);
-
-    int i = 0;
-    BinTree* tree = BinTreeCtor(NodeBinTreeCtorPreorder (buf, &i));
-
-    //fclose (fp);
-
-    return tree;
 }
