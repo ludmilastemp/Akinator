@@ -1,7 +1,7 @@
 #ifndef STL_akinator_
 #define STL_akinator_
 
-#include "Bintree/STL_bintree_struct.h"
+#include "BinTree/STL_bintree_struct.h"
 #include "BinTree/STACK_FILE_TYPE_WayToNode.h"
 #include "STL_Stack/generic.h"
 

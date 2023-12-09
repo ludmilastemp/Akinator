@@ -1,5 +1,5 @@
-#include "Bintree/STL_bintree_struct.h"
-#include "Bintree/STL_graphviz.h"
+#include "BinTree/STL_bintree_struct.h"
+#include "BinTree/STL_graphviz.h"
 #include "STL_akinator.h"
 
 #include <stdio.h>

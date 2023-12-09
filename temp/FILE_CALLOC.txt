@@ -1,0 +1,20 @@
+1. 00BF1550 - allocated 16 bytes
+2. 00BF1568 - allocated 16 bytes
+3. 00BF1580 - allocated 16 bytes
+4. 00BF1598 - allocated 16 bytes
+5. 00BF15B0 - allocated 16 bytes
+6. 00BF15C8 - allocated 16 bytes
+7. 00BF15E0 - allocated 16 bytes
+8. 00BF15F8 - allocated 16 bytes
+9. 00BF1610 - allocated 16 bytes
+10. 00BF1628 - allocated 12 bytes
+1. 00BF1580 - free
+2. 00BF15B0 - free
+3. 00BF15C8 - free
+4. 00BF1598 - free
+5. 00BF1568 - free
+6. 00BF15F8 - free
+7. 00BF1610 - free
+8. 00BF15E0 - free
+9. 00BF1550 - free
+10. 00BF1468 - free
