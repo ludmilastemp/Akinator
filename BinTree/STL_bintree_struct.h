@@ -8,7 +8,7 @@
 #include <sys\stat.h>
 #include <assert.h>
 
-#include "../../Onegin/STL_file_open.h"
+#include "../STL_Onegin/STL_file_open.h"
 
 const char NULL_POINTER[] = "nil";
 

@@ -3,7 +3,7 @@
 
 #include "Bintree/STL_bintree_struct.h"
 #include "BinTree/STACK_FILE_TYPE_WayToNode.h"
-#include "../Stack/generic.h"
+#include "STL_Stack/generic.h"
 
 #include <stdio.h>
 #include <stdlib.h>

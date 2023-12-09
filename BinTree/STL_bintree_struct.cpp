@@ -121,11 +121,20 @@ SubtreeDump (NodeBinTree* node)
 int
 BinTreePrintPreorder (NodeBinTree* node, const char* const fileName)
 {
-    if (fileName == nullptr) return ERROR_NOT_FILE;
-    if (node     == nullptr) return ERROR_NOT_NODE_POINTER;
+    if (node == nullptr) return ERROR_NOT_NODE_POINTER;
+
+    if (fileName == nullptr)
+    {
+        printf ("\nОШИБКА!!! Пожалуйста, укажите в аргументах командной строки имя файла, куда нужно записать дерево\n");
+        return 0;
+    }
 
     FILE* fp = fopen (fileName, "w");
-    assert (fp);
+    if (fp == nullptr)
+    {
+        printf ("\nНе удалось открыть файл\n");
+        return 0;
+    }
 
     NodeBinTreePrintPreorder (node, fp);
 
@@ -164,6 +173,12 @@ BinTreeReadPreorder (struct File* file)
     {
         printf ("ERROR_NOT_FILE\n");
         return nullptr;
+    }
+
+    if (file->name == nullptr)
+    {
+        printf ("\nОШИБКА!!! Пожалуйста, укажите в аргументах командной строки имя файла, где записано дерево\n");
+        return 0;
     }
 
     STL_Fread (file);
@@ -298,8 +313,6 @@ void* STL_calloc (int count, int size)
     void* memory = (void*) calloc (count, size);
     fprintf (fp, "%d. %p - allocated %d bytes\n",
         countCalloc, memory, count * size);
-    fprintf (stderr, "%d. %p - allocated %d bytes\n",
-        countCalloc, memory, count * size);
 
     fclose (fp);
 
@@ -315,7 +328,6 @@ void* STL_free (void* ptr)
     assert (fp);
 
     fprintf (fp, "%d. %p - free\n", count, ptr);
-    fprintf (stderr, "%d. %p - free\n", count, ptr);
 
     free (ptr);
 
