@@ -3,7 +3,7 @@
 
 #include "STL_bintree_struct.h"
 
-int
+void
 STL_GraphvizBinTree (const NodeBinTree* node);
 
 #endif /* STL_graphviz_ */

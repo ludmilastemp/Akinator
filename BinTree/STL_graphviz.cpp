@@ -6,9 +6,9 @@
 
 static void PrintSubtree (FILE* fp, const NodeBinTree* node, int* num);
 
-int  STL_GraphvizBinTree (const NodeBinTree* node)
+void STL_GraphvizBinTree (const NodeBinTree* node)
 {
-    FILE* fp = fopen ("BinTree/STL_graphviz_png.dot", "w");
+    FILE* fp = fopen ("temp/STL_graphviz_png.dot", "w");
     assert (fp);
 
     pr ("digraph STL\n{\n"
@@ -24,7 +24,6 @@ int  STL_GraphvizBinTree (const NodeBinTree* node)
     pr ("\n}\n");
 
     fclose (fp);
-
 }
 
 static void PrintSubtree (FILE* fp, const NodeBinTree* node, int* num)

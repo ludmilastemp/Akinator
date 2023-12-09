@@ -1,7 +1,14 @@
 #include "STL_bintree_struct.h"
 
+#define calloc(x,y) STL_calloc (x, y)
+#define malloc(x,y) STL_calloc (x, y)
+#define free(x)     STL_free (x)
+
+void* STL_calloc (int count, int size);
+void* STL_free   (void* ptr);
+
 static int
-SubtreePrintPreorder (NodeBinTree* node,
+NodeBinTreePrintPreorder (NodeBinTree* node,
                       FILE* fp);
 
 static NodeBinTree*
@@ -50,7 +57,7 @@ NodeBinTreeDtor (NodeBinTree* node)
     NodeBinTreeDtor (node->left);
     NodeBinTreeDtor (node->right);
 
-    node->data  = nullptr; // 0
+    node->data  = nullptr;
     node->left  = nullptr;
     node->right = nullptr;
 
@@ -82,7 +89,7 @@ BinTreeDtor (BinTree* binTree)
     if (binTree == nullptr) return nullptr;
 
     NodeBinTreeDtor (binTree->root);
-    if (binTree->buf      != nullptr) free (binTree->buf);
+    if (binTree->buf != nullptr) free (binTree->buf);
 
     binTree->root = nullptr;
     binTree->buf  = nullptr;
@@ -120,14 +127,16 @@ BinTreePrintPreorder (NodeBinTree* node, const char* const fileName)
     FILE* fp = fopen (fileName, "w");
     assert (fp);
 
-    SubtreePrintPreorder (node, fp);
+    NodeBinTreePrintPreorder (node, fp);
 
     fclose (fp);
+
+    return 0;
 }
 
 
 static int
-SubtreePrintPreorder (NodeBinTree* node, FILE* fp)
+NodeBinTreePrintPreorder (NodeBinTree* node, FILE* fp)
 {
     if (fp == nullptr) return ERROR_NOT_FILE_POINTER;
 
@@ -140,8 +149,8 @@ SubtreePrintPreorder (NodeBinTree* node, FILE* fp)
     fprintf (fp, "(");
 
     fprintf (fp, "\"" BIN_TREE_DATA_PRINT_SPECIFIER "\"", node->data);
-    SubtreePrintPreorder (node->left,  fp);
-    SubtreePrintPreorder (node->right, fp);
+    NodeBinTreePrintPreorder (node->left,  fp);
+    NodeBinTreePrintPreorder (node->right, fp);
 
     fprintf (fp, ")");
 
@@ -162,6 +171,15 @@ BinTreeReadPreorder (struct File* file)
     int pointer = 0;
 
     NodeBinTree* root = NodeBinTreeCtorPreorder (file->text, &pointer);
+
+    /// ошибка при чтении дерева
+    if (pointer == -1)
+    {
+        printf ("\n\n\nTREE IS INCORRECT!!!\n\n\n");
+        NodeBinTreeDtor (root);
+        return nullptr;
+    }
+
     BinTree* tree = BinTreeCtor(root, 1, file->text);
 
     return tree;
@@ -182,6 +200,7 @@ NodeBinTreeCtorPreorder (char* const buf, int* len, NodeBinTree* parent)
     }
 
     NodeBinTree* node = ReadDataNodeBinTree (buf, len);
+    if (node == nullptr) return nullptr;
 
     node->left   = ReadBranchNodeBinTree (buf, len, node);
     node->right  = ReadBranchNodeBinTree (buf, len, node);
@@ -193,7 +212,8 @@ NodeBinTreeCtorPreorder (char* const buf, int* len, NodeBinTree* parent)
         return node;
     }
 
-    return nullptr;
+    *len = -1;
+    return node;
 }
 
 static NodeBinTree*
@@ -201,15 +221,22 @@ ReadDataNodeBinTree (char* const buf, int* len)
 {
     if (buf == nullptr || len == nullptr)
     {
-        printf ("ERROR_NOT_FILE_POINTER\n");
         return nullptr;
     }
 
     NodeBinTree* node = NodeBinTreeCtor ("", nullptr, nullptr);
-                        // если ошибка, то free
+    if (node == nullptr)
+    {
+        printf ("ERROR!!! NO MEMORY\n");
+        *len = -1;
+        return nullptr;
+    }
 
     if (buf[(*len)++] != '"')
     {
+        printf ("ERROR!!! %d symbol\n", *len);
+        free (node);
+        *len = -1;
         return nullptr;
     }
     node->data = buf + *len;
@@ -226,7 +253,6 @@ ReadBranchNodeBinTree (char* const buf, int* len,
 {
     if (buf == nullptr || len == nullptr)
     {
-        printf ("ERROR_NOT_FILE_POINTER\n");
         return nullptr;
     }
 
@@ -235,11 +261,65 @@ ReadBranchNodeBinTree (char* const buf, int* len,
         return NodeBinTreeCtorPreorder (buf, len, node);
     }
 
-    else if (strncmp (buf + *len, NULL_POINTER, NULL_POINTER_LEN) == 0)
+    else if (strncmp (buf + *len, NULL_POINTER, sizeof (NULL_POINTER) - 1) == 0)
     {
-        *len += NULL_POINTER_LEN;
+        *len += sizeof (NULL_POINTER) - 1;
         return nullptr;
     }
 
     return nullptr;
+}
+
+#undef calloc
+#undef malloc
+#undef free
+
+void* STL_calloc (int count, int size)
+{
+    static int countCalloc = 0;
+    countCalloc++;
+
+    FILE* fp = nullptr;
+    static int isFileOpen = 0;
+
+    if (!isFileOpen){
+        fp = fopen ("temp/FILE_CALLOC.txt", "w");
+        assert (fp);
+
+        isFileOpen = 1;
+    }
+
+    else
+    {
+        fp = fopen ("temp/FILE_CALLOC.txt", "a");
+        assert (fp);
+    }
+
+    void* memory = (void*) calloc (count, size);
+    fprintf (fp, "%d. %p - allocated %d bytes\n",
+        countCalloc, memory, count * size);
+    fprintf (stderr, "%d. %p - allocated %d bytes\n",
+        countCalloc, memory, count * size);
+
+    fclose (fp);
+
+    return memory;
+}
+
+void* STL_free (void* ptr)
+{
+    static int count = 0;
+    count++;
+
+    FILE* fp = fopen ("temp/FILE_CALLOC.txt", "a");
+    assert (fp);
+
+    fprintf (fp, "%d. %p - free\n", count, ptr);
+    fprintf (stderr, "%d. %p - free\n", count, ptr);
+
+    free (ptr);
+
+    fclose (fp);
+
+    return ptr;
 }

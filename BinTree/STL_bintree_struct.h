@@ -10,7 +10,6 @@
 
 #include "../../Onegin/STL_file_open.h"
 
-const int  NULL_POINTER_LEN = 3;
 const char NULL_POINTER[] = "nil";
 
 typedef const char* BIN_TREE_DATA_T;
@@ -33,7 +32,7 @@ struct BinTree
 };
 
 enum BinTreeError
-{                       // NO not not
+{
     ERROR_NOT_BIN_TREE_POINTER  = 1 << 10,
     ERROR_NOT_NODE_POINTER      = 1 << 0,
     ERROR_NOT_FILE_POINTER      = 1 << 1,
@@ -66,12 +65,8 @@ NodeBinTreeDataCtor (BIN_TREE_DATA_T data,
                      NodeBinTree* parent  = nullptr,
                      BinTree*     binTree = nullptr);
 
-NodeBinTree*
-BinTreeCopy (NodeBinTree* node);
-
 int
 SubtreeDump (NodeBinTree* node);
-
 
 int
 BinTreePrintPreorder (NodeBinTree* node,

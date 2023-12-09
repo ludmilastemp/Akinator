@@ -3,24 +3,24 @@
 static NodeBinTree*
 CreateObject (NodeBinTree* root);
 
-static NodeBinTree*
+static int
 FindObjectRecursively (NodeBinTree* node,
-                       Stack_int* way,
+                       Stack_WayToNode* way,
                        const char* object);
 
 static NodeBinTree*
 DescribeObject (NodeBinTree* node,
                 const char* object,
-                Stack_int* way,
+                Stack_WayToNode* way,
                 int initialStep = 0,
-                int initialSize = 0);
+                long long initialSize = 0);
 
 static NodeBinTree*
 DescribeObjectDifference (BinTree* tree,
                           const char* object1,
-                          Stack_int* way1,
+                          Stack_WayToNode* way1,
                           const char* object2,
-                          Stack_int* way2);
+                          Stack_WayToNode* way2);
 
 static NodeBinTree*
 FoundAnswer (NodeBinTree* node);
@@ -56,7 +56,7 @@ PredictObject (BinTree* tree)
 
         printf ("Это %s?\n", node->data);
 
-        scanf ("%s", &answer);
+        scanf (FORMAT_SPECIFICATION_ANS, answer);
 
         if (strcmp (answer, POSITIVE_ANSWER) == 0)
         {
@@ -106,7 +106,7 @@ FindObject (BinTree* tree, const char* object)
         return nullptr;
     }
 
-    Stack_int way = {};
+    Stack_WayToNode way = {};
     StackCtor (&way);
 
     FindObjectRecursively (tree->root, &way, object);
@@ -117,9 +117,6 @@ FindObject (BinTree* tree, const char* object)
     }
     else
     {
-        int lastWay = 0;
-        StackPop (&way, &lastWay);
-
         printf ("\nХихи, сейчас я тебе все про него расскажу\n");
         DescribeObject (tree->root, object, &way);
     }
@@ -132,10 +129,10 @@ FindObject (BinTree* tree, const char* object)
 int
 CompareObjects (BinTree* tree, const char* object1, const char* object2)
 {
-    Stack_int wayObject1 = {};
+    Stack_WayToNode wayObject1 = {};
     StackCtor (&wayObject1);
 
-    Stack_int wayObject2 = {};
+    Stack_WayToNode wayObject2 = {};
     StackCtor (&wayObject2);
 
     FindObjectRecursively (tree->root, &wayObject1, object1);
@@ -150,10 +147,6 @@ CompareObjects (BinTree* tree, const char* object1, const char* object2)
     }
     else
     {
-        int lastWay = 0;
-        StackPop (&wayObject1, &lastWay);
-        StackPop (&wayObject2, &lastWay);
-
         DescribeObjectDifference (tree, object1, &wayObject1, object2, &wayObject2);
     }
 
@@ -179,7 +172,7 @@ FoundAnswer (NodeBinTree* node)
     {
         printf ("\nКак ты считаешь, я заслужил синюю руку?\n");
 
-        scanf ("%s", &answer);
+        scanf (FORMAT_SPECIFICATION_ANS, answer);
 
         if (strcmp (answer, POSITIVE_ANSWER) == 0)
         {
@@ -203,6 +196,11 @@ FoundAnswer (NodeBinTree* node)
 static NodeBinTree*
 CreateObject (NodeBinTree* node)
 {
+    if (node == nullptr)
+    {
+        return nullptr;
+    }
+
     char* answer = (char*) calloc (MAX_LEN_STR, sizeof (char));
     if (answer == nullptr)
     {
@@ -218,17 +216,11 @@ CreateObject (NodeBinTree* node)
     }
 
     printf ("А кто это был?\n");
-    fflush (stdin);
-
-    fgets (answer, MAX_LEN_STR, stdin);
-    answer[strlen (answer) - 1] = '\0';
+    scanf (FORMAT_SPECIFICATION_STR, answer);
 
     printf ("Какое свойство его отличает от %s?\
              \nВведите свойство: %s ", node->data, answer);
-    fflush (stdin);
-
-    fgets (question, MAX_LEN_STR, stdin);
-    question[strlen (question) - 1] = '\0';
+    scanf (FORMAT_SPECIFICATION_STR, question);
 
     node->left  = NodeBinTreeCtor (answer,     nullptr, nullptr);
     node->right = NodeBinTreeCtor (node->data, nullptr, nullptr);
@@ -239,60 +231,55 @@ CreateObject (NodeBinTree* node)
     return node;
 }
 
-static NodeBinTree*
-FindObjectRecursively (NodeBinTree* node, Stack_int* way, const char* object)
+static int
+FindObjectRecursively (NodeBinTree* node, Stack_WayToNode* way, const char* object)
 {
     if (way == nullptr)
     {
         printf ("no stack way found\n");
-        return nullptr;
+        return 0;
     }
 
-    if (node == nullptr) return nullptr;
+    if (node == nullptr) return 0;
 
     if (strcmp (node->data, object) == 0)
     {
-        StackPush (way, FIND);
-        return node;
+        return 1;
     }
 
     StackPush (way, LEFT);
-    FindObjectRecursively (node->left, way, object);
 
-    int lastWay = 0;
-
-    StackPop (way, &lastWay);
-    if (lastWay == FIND)
+    if (FindObjectRecursively (node->left, way, object))
     {
-        StackPush (way, lastWay);
-        return node;
+        return 1;
     }
+
+    StackPop (way, nullptr);
 
     StackPush (way, RIGHT);
-    FindObjectRecursively (node->right, way, object);
 
-    StackPop (way, &lastWay);
-    if (lastWay == FIND)
+    if (FindObjectRecursively (node->right, way, object))
     {
-        StackPush (way, lastWay);
-        return node;
+        return 1;
     }
 
-    return nullptr;
+    StackPop (way, nullptr);
+
+    return 0;
 }
 
 static NodeBinTree*
-DescribeObject (NodeBinTree* node, const char* object, Stack_int* way, int initialStep, int initialSize)
+DescribeObject (NodeBinTree* node, const char* object, Stack_WayToNode* way, int initialStep, long long initialSize)
 {
-    if (node == nullptr) return nullptr;
-    if (way == nullptr)  return nullptr;
+    if (node == nullptr)  return nullptr;
+    if (way == nullptr)   return nullptr;
     if (object != 0)      printf ("%s \n", object);
     if (initialSize == 0) initialSize = way->size;
 
     for (int i = initialStep; i < initialSize; i++)
     {
-        if (way->data[i] == LEFT)  printf ("  это ");
-        else printf ("  это не ");
+        if (way->data[i] == LEFT)  printf ("  ");
+        else printf ("  не ");
 
         printf ("%s\n", node->data);
 
@@ -304,7 +291,7 @@ DescribeObject (NodeBinTree* node, const char* object, Stack_int* way, int initi
 }
 
 static NodeBinTree*
-DescribeObjectDifference (BinTree* tree, const char* object1, Stack_int* way1, const char* object2, Stack_int* way2)
+DescribeObjectDifference (BinTree* tree, const char* object1, Stack_WayToNode* way1, const char* object2, Stack_WayToNode* way2)
 {
     if (tree == nullptr    ||
         way1 == nullptr    ||

@@ -2,24 +2,30 @@
 #define STL_akinator_
 
 #include "Bintree/STL_bintree_struct.h"
-#include "../SPU/spu/STACK_FILE_TYPE_int.h"
-#include "../SPU/lib/STL_stack/generic.h"
+#include "BinTree/STACK_FILE_TYPE_WayToNode.h"
+#include "../Stack/generic.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <assert.h>
 
-const int MAX_LEN_STR = 100;
-const int MAX_LEN_ANS = 10;
+enum AkinatorFunctions
+{
+    PredictObjectMode        = '1',
+    FindObjectMode           = '2',
+    CompareObjectsMode       = '3',
+    GraphvizBinTreeMode      = '4',
+    BinTreePrintPreorderMode = '5',
+    ExitMode                 = '6',
+};
 
-const int FIND  = 696969;    // почему не enum
-const int LEFT  = 1;
-const int RIGHT = 2;
+const int  MAX_LEN_STR = 100;
+const char FORMAT_SPECIFICATION_STR[] = " %99[^\n]";
+const int  MAX_LEN_ANS = 10;
+const char FORMAT_SPECIFICATION_ANS[] = " %9[^\n]";
 
-const int  POSITIVE_ANSWER_LEN = 2;
 const char POSITIVE_ANSWER[] = "да";
-const int  NEGATIVE_ANSWER_LEN = 3;
 const char NEGATIVE_ANSWER[] = "нет";
 
 NodeBinTree*
